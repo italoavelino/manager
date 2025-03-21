@@ -5,6 +5,7 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -15,9 +16,14 @@ public class JwtUtil {
 
     @Value("${jwt.secret}") private String secret;
     private static final long EXPIRATION_TIME = 1000 * 60 * 60;
+    private Algorithm algorithm;
+    private JWTVerifier verifier;
 
-    private final Algorithm algorithm = Algorithm.HMAC256(secret);
-    private final JWTVerifier verifier = JWT.require(algorithm).build();
+    @PostConstruct
+    public void init() {
+        this.algorithm = Algorithm.HMAC256(secret);
+        this.verifier = JWT.require(algorithm).build();
+    }
 
     public String generateToken(String userId) {
         return JWT.create()
