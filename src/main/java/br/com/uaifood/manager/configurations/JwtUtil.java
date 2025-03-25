@@ -15,7 +15,7 @@ import java.util.Date;
 public class JwtUtil {
 
     @Value("${jwt.secret}") private String secret;
-    private static final long EXPIRATION_TIME = 1000 * 60 * 60;
+    private static final long EXPIRATION_TIME = 1000 * 60 * 60; //1 hora
     private Algorithm algorithm;
     private JWTVerifier verifier;
 
