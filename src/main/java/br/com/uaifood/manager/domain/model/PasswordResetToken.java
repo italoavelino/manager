@@ -7,18 +7,20 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.Date;
+
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Document(collection = "users")
-public class User {
+@Document(collection = "password_reset_tokens")
+public class PasswordResetToken {
+
     @Id
     private String id;
 
-    private String name;
-    private String email;
-    private String password;
-    private String role;
-    private boolean enabled;
+    private String token;
+    private String userId;
+    private Date expiryDate;
 }
+

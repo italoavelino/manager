@@ -1,7 +1,9 @@
 package br.com.uaifood.manager.exceptions;
 
-public class EmailAlreadyExistsException extends RuntimeException{
+import org.springframework.http.HttpStatus;
+
+public class EmailAlreadyExistsException extends CustomException {
     public EmailAlreadyExistsException() {
-        super("Email já cadastrado");
+        super("E-mail já cadastrado", HttpStatus.CONFLICT, "EMAIL_ALREADY_EXISTS");
     }
 }

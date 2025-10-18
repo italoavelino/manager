@@ -1,11 +1,11 @@
 package br.com.uaifood.manager.configurations;
 
+import br.com.uaifood.manager.domain.model.User;
+import br.com.uaifood.manager.exceptions.InvalidTokenException;
 import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -14,36 +14,49 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret}") private String secret;
-    private static final long EXPIRATION_TIME = 1000 * 60 * 60; //1 hora
-    private Algorithm algorithm;
-    private JWTVerifier verifier;
+    @Value("${jwt.secretKey}")
+    private String secretKey;
 
-    @PostConstruct
-    public void init() {
-        this.algorithm = Algorithm.HMAC256(secret);
-        this.verifier = JWT.require(algorithm).build();
-    }
+    @Value("${jwt.expirationMs}")
+    private Long expirationMs;
 
-    public String generateToken(String userId) {
+    public String generateToken(User user) {
         return JWT.create()
-                .withSubject(userId)
+                .withSubject(user.getId())
+                .withClaim("email", user.getEmail())
+                .withClaim("role", user.getRole())
+                .withClaim("name", user.getName())
                 .withIssuedAt(new Date())
-                .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                .sign(algorithm);
+                .withExpiresAt(new Date(System.currentTimeMillis() + expirationMs))
+                .sign(getAlgorithm());
     }
 
-    public String extractUserId(String token) {
+    private DecodedJWT validateAndDecode(String token) {
         try {
-            DecodedJWT decodedJWT = verifier.verify(token);
-            return decodedJWT.getSubject();
+            return JWT.require(getAlgorithm()).build().verify(token);
         } catch (JWTVerificationException e) {
-            return null;
+            throw new InvalidTokenException();
         }
     }
 
-    public boolean isTokenValid(String token, String userId) {
-        String extractedId = extractUserId(token);
-        return extractedId != null && extractedId.equals(userId);
+    public boolean isTokenValid(String token) {
+        try {
+            validateAndDecode(token);
+            return true;
+        } catch (InvalidTokenException e) {
+            return false;
+        }
+    }
+
+    public String extractUserId(String token) {
+        return validateAndDecode(token).getSubject();
+    }
+
+    public String extractEmail(String token) {
+        return validateAndDecode(token).getClaim("email").asString();
+    }
+
+    private Algorithm getAlgorithm() {
+        return Algorithm.HMAC256(secretKey);
     }
 }
